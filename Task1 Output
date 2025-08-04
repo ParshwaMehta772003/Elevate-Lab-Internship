@@ -1,0 +1,297 @@
+--- Initial Data Info ---
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 12 columns):
+ #   Column       Non-Null Count  Dtype  
+---  ------       --------------  -----  
+ 0   PassengerId  891 non-null    int64  
+ 1   Survived     891 non-null    int64  
+ 2   Pclass       891 non-null    int64  
+ 3   Name         891 non-null    object 
+ 4   Sex          891 non-null    object 
+ 5   Age          714 non-null    float64
+ 6   SibSp        891 non-null    int64  
+ 7   Parch        891 non-null    int64  
+ 8   Ticket       891 non-null    object 
+ 9   Fare         891 non-null    float64
+ 10  Cabin        204 non-null    object 
+ 11  Embarked     889 non-null    object 
+dtypes: float64(2), int64(5), object(5)
+memory usage: 83.7+ KB
+
+--- Missing Values Before Handling ---
+PassengerId      0
+Survived         0
+Pclass           0
+Name             0
+Sex              0
+Age            177
+SibSp            0
+Parch            0
+Ticket           0
+Fare             0
+Cabin          687
+Embarked         2
+dtype: int64
+
+--- First 5 Rows of Raw Data ---
+   PassengerId  Survived  Pclass  \
+0            1         0       3   
+1            2         1       1   
+2            3         1       3   
+3            4         1       1   
+4            5         0       3   
+
+                                                Name     Sex   Age  SibSp  \
+0                            Braund, Mr. Owen Harris    male  22.0      1   
+1  Cumings, Mrs. John Bradley (Florence Briggs Th...  female  38.0      1   
+2                             Heikkinen, Miss. Laina  female  26.0      0   
+3       Futrelle, Mrs. Jacques Heath (Lily May Peel)  female  35.0      1   
+4                           Allen, Mr. William Henry    male  35.0      0   
+
+   Parch            Ticket     Fare Cabin Embarked  
+0      0         A/5 21171   7.2500   NaN        S  
+1      0          PC 17599  71.2833   C85        C  
+2      0  STON/O2. 3101282   7.9250   NaN        S  
+3      0            113803  53.1000  C123        S  
+4      0            373450   8.0500   NaN        S  
+
+No duplicate rows found.
+
+Missing values in 'Age' after imputation: 0
+Dropped 'Cabin' column.
+Missing values in 'Embarked' after imputation: 0
+
+--- After Feature Engineering ---
+   FamilySize  IsAlone Title
+0           2        0    Mr
+1           2        0   Mrs
+2           1        1  Miss
+3           2        0   Mrs
+4           1        1    Mr
+
+Title value counts:
+ Title
+Mr        517
+Miss      182
+Mrs       125
+Master     40
+Rare       27
+Name: count, dtype: int64
+
+--- After Encoding Categorical Variables ---
+   PassengerId Survived                                               Name  \
+0            1        0                            Braund, Mr. Owen Harris   
+1            2        1  Cumings, Mrs. John Bradley (Florence Briggs Th...   
+2            3        1                             Heikkinen, Miss. Laina   
+3            4        1       Futrelle, Mrs. Jacques Heath (Lily May Peel)   
+4            5        0                           Allen, Mr. William Henry   
+
+  Sex   Age  SibSp  Parch            Ticket     Fare  FamilySize  IsAlone  \
+0   0  22.0      1      0         A/5 21171   7.2500           2        0   
+1   1  38.0      1      0          PC 17599  71.2833           2        0   
+2   1  26.0      0      0  STON/O2. 3101282   7.9250           1        1   
+3   1  35.0      1      0            113803  53.1000           2        0   
+4   0  35.0      0      0            373450   8.0500           1        1   
+
+   Embarked_Q  Embarked_S  Embarked_nan  Title_Miss  Title_Mr  Title_Mrs  \
+0       False        True         False       False      True      False   
+1       False       False         False       False     False       True   
+2       False        True         False        True     False      False   
+3       False        True         False       False     False       True   
+4       False        True         False       False      True      False   
+
+   Title_Rare  Pclass_2  Pclass_3  
+0       False     False      True  
+1       False     False     False  
+2       False     False      True  
+3       False     False     False  
+4       False     False      True  
+
+
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 20 columns):
+ #   Column        Non-Null Count  Dtype   
+---  ------        --------------  -----   
+ 0   PassengerId   891 non-null    int64   
+ 1   Survived      891 non-null    category
+ 2   Name          891 non-null    object  
+ 3   Sex           891 non-null    category
+ 4   Age           891 non-null    float64 
+ 5   SibSp         891 non-null    int64   
+ 6   Parch         891 non-null    int64   
+ 7   Ticket        891 non-null    object  
+ 8   Fare          891 non-null    float64 
+ 9   FamilySize    891 non-null    int64   
+ 10  IsAlone       891 non-null    int64   
+ 11  Embarked_Q    891 non-null    bool    
+ 12  Embarked_S    891 non-null    bool    
+ 13  Embarked_nan  891 non-null    bool    
+ 14  Title_Miss    891 non-null    bool    
+ 15  Title_Mr      891 non-null    bool    
+ 16  Title_Mrs     891 non-null    bool    
+ 17  Title_Rare    891 non-null    bool    
+ 18  Pclass_2      891 non-null    bool    
+ 19  Pclass_3      891 non-null    bool    
+dtypes: bool(9), category(2), float64(2), int64(5), object(2)
+memory usage: 72.6+ KB
+
+--- First 5 Rows After Standardization of Numerical Features ---
+   PassengerId Survived                                               Name  \
+0            1        0                            Braund, Mr. Owen Harris   
+1            2        1  Cumings, Mrs. John Bradley (Florence Briggs Th...   
+2            3        1                             Heikkinen, Miss. Laina   
+3            4        1       Futrelle, Mrs. Jacques Heath (Lily May Peel)   
+4            5        0                           Allen, Mr. William Henry   
+
+  Sex       Age  SibSp  Parch            Ticket      Fare  FamilySize  \
+0   0 -0.565736      1      0         A/5 21171 -0.502445    0.059160   
+1   1  0.663861      1      0          PC 17599  0.786845    0.059160   
+2   1 -0.258337      0      0  STON/O2. 3101282 -0.488854   -0.560975   
+3   1  0.433312      1      0            113803  0.420730    0.059160   
+4   0  0.433312      0      0            373450 -0.486337   -0.560975   
+
+   IsAlone  Embarked_Q  Embarked_S  Embarked_nan  Title_Miss  Title_Mr  \
+0        0       False        True         False       False      True   
+1        0       False       False         False       False     False   
+2        1       False        True         False        True     False   
+3        0       False        True         False       False     False   
+4        1       False        True         False       False      True   
+
+   Title_Mrs  Title_Rare  Pclass_2  Pclass_3  
+0      False       False     False      True  
+1       True       False     False     False  
+2      False       False     False      True  
+3       True       False     False     False  
+4      False       False     False      True  
+
+Dropped columns: ['PassengerId', 'Name', 'Ticket', 'SibSp', 'Parch']
+
+--- Final Cleaned Data Snapshot (First 5 Rows) ---
+  Survived Sex       Age      Fare  FamilySize  IsAlone  Embarked_Q  \
+0        0   0 -0.565736 -0.502445    0.059160        0       False   
+1        1   1  0.663861  0.786845    0.059160        0       False   
+2        1   1 -0.258337 -0.488854   -0.560975        1       False   
+3        1   1  0.433312  0.420730    0.059160        0       False   
+4        0   0  0.433312 -0.486337   -0.560975        1       False   
+
+   Embarked_S  Embarked_nan  Title_Miss  Title_Mr  Title_Mrs  Title_Rare  \
+0        True         False       False      True      False       False   
+1       False         False       False     False       True       False   
+2        True         False        True     False      False       False   
+3        True         False       False     False       True       False   
+4        True         False       False      True      False       False   
+
+   Pclass_2  Pclass_3  
+0     False      True  
+1     False     False  
+2     False      True  
+3     False     False  
+4     False      True  
+
+--- Final Data Info After All Preprocessing Steps ---
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 15 columns):
+ #   Column        Non-Null Count  Dtype   
+---  ------        --------------  -----   
+ 0   Survived      891 non-null    category
+ 1   Sex           891 non-null    category
+ 2   Age           891 non-null    float64 
+ 3   Fare          891 non-null    float64 
+ 4   FamilySize    891 non-null    float64 
+ 5   IsAlone       891 non-null    int64   
+ 6   Embarked_Q    891 non-null    bool    
+ 7   Embarked_S    891 non-null    bool    
+ 8   Embarked_nan  891 non-null    bool    
+ 9   Title_Miss    891 non-null    bool    
+ 10  Title_Mr      891 non-null    bool    
+ 11  Title_Mrs     891 non-null    bool    
+ 12  Title_Rare    891 non-null    bool    
+ 13  Pclass_2      891 non-null    bool    
+ 14  Pclass_3      891 non-null    bool    
+dtypes: bool(9), category(2), float64(3), int64(1)
+memory usage: 37.8 KB
+
+Missing values in final DataFrame:
+ Survived        0
+Sex             0
+Age             0
+Fare            0
+FamilySize      0
+IsAlone         0
+Embarked_Q      0
+Embarked_S      0
+Embarked_nan    0
+Title_Miss      0
+Title_Mr        0
+Title_Mrs       0
+Title_Rare      0
+Pclass_2        0
+Pclass_3        0
+dtype: int64
+
+--- Final Data Info After All Preprocessing Steps (including Outlier Removal) ---
+<class 'pandas.core.frame.DataFrame'>
+Index: 718 entries, 0 to 890
+Data columns (total 15 columns):
+ #   Column        Non-Null Count  Dtype   
+---  ------        --------------  -----   
+ 0   Survived      718 non-null    category
+ 1   Sex           718 non-null    category
+ 2   Age           718 non-null    float64 
+ 3   Fare          718 non-null    float64 
+ 4   FamilySize    718 non-null    float64 
+ 5   IsAlone       718 non-null    int64   
+ 6   Embarked_Q    718 non-null    bool    
+ 7   Embarked_S    718 non-null    bool    
+ 8   Embarked_nan  718 non-null    bool    
+ 9   Title_Miss    718 non-null    bool    
+ 10  Title_Mr      718 non-null    bool    
+ 11  Title_Mrs     718 non-null    bool    
+ 12  Title_Rare    718 non-null    bool    
+ 13  Pclass_2      718 non-null    bool    
+ 14  Pclass_3      718 non-null    bool    
+dtypes: bool(9), category(2), float64(3), int64(1)
+memory usage: 36.0 KB
+
+--- Final Cleaned Data Snapshot (First 5 Rows) ---
+  Survived Sex       Age      Fare  FamilySize  IsAlone  Embarked_Q  \
+0        0   0 -0.565736 -0.502445    0.059160        0       False   
+2        1   1 -0.258337 -0.488854   -0.560975        1       False   
+3        1   1  0.433312  0.420730    0.059160        0       False   
+4        0   0  0.433312 -0.486337   -0.560975        1       False   
+5        0   0 -0.104637 -0.478116   -0.560975        1        True   
+
+   Embarked_S  Embarked_nan  Title_Miss  Title_Mr  Title_Mrs  Title_Rare  \
+0        True         False       False      True      False       False   
+2        True         False        True     False      False       False   
+3        True         False       False     False       True       False   
+4        True         False       False      True      False       False   
+5       False         False       False      True      False       False   
+
+   Pclass_2  Pclass_3  
+0     False      True  
+2     False      True  
+3     False     False  
+4     False      True  
+5     False      True  
+
+Missing values in final DataFrame:
+ Survived        0
+Sex             0
+Age             0
+Fare            0
+FamilySize      0
+IsAlone         0
+Embarked_Q      0
+Embarked_S      0
+Embarked_nan    0
+Title_Miss      0
+Title_Mr        0
+Title_Mrs       0
+Title_Rare      0
+Pclass_2        0
+Pclass_3        0
+dtype: int64
