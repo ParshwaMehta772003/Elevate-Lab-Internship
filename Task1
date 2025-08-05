@@ -1,14 +1,9 @@
-# First, import necessary libraries
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler # For numerical feature scaling
 
-# --- 1. Load the dataset and explore basic info (nulls, data types). ---
-
-# Attempt to load the dataset from common locations
-# If your file is in 'MultipleFiles/Titanic-Dataset.csv', use that path.
 try:
     file_path = 'Titanic-Dataset.csv' # Assumes file is in the same directory
     df = pd.read_csv(file_path)
@@ -28,33 +23,24 @@ print(df.isnull().sum())
 print("\n--- First 5 Rows of Raw Data ---")
 print(df.head())
 
-# 2. Store initial number of rows for reference (for duplicate removal check)
 initial_rows = df.shape[0]
 
-# 3. Remove duplicates
 df.drop_duplicates(inplace=True)
 if df.shape[0] < initial_rows:
     print(f"\nRemoved {initial_rows - df.shape[0]} duplicate rows.")
 else:
     print("\nNo duplicate rows found.")
 
-# --- 2. Handle missing values using mean/median/imputation. ---
-
-# Impute 'Age' with the median
-# Ensure 'Age' is numeric, coercing errors to NaN if any non-numeric values exist
 df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
 df['Age'].fillna(df['Age'].median(), inplace=True)
 print("\nMissing values in 'Age' after imputation:", df['Age'].isnull().sum())
 
-# Drop 'Cabin' due to many missing values
 if 'Cabin' in df.columns:
     df.drop('Cabin', axis=1, inplace=True)
     print("Dropped 'Cabin' column.")
 else:
     print("'Cabin' column not found (already dropped or not in dataset).")
 
-# Impute 'Embarked' with the mode (most frequent value)
-# Ensure 'Embarked' is string type before mode() to handle potential mixed types or NaNs gracefully
 if 'Embarked' in df.columns:
     df['Embarked'] = df['Embarked'].astype(str)
     df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
@@ -62,21 +48,13 @@ if 'Embarked' in df.columns:
 else:
     print("'Embarked' column not found.")
 
-
-# --- 5. Feature Engineering (Moved here as it often precedes encoding) ---
-
-# Create FamilySize and IsAlone features
 df['FamilySize'] = df['SibSp'] + df['Parch'] + 1
 df['IsAlone'] = (df['FamilySize'] == 1).astype(int)
 
-# Extract Title from Name
-# Ensure 'Name' is string type before splitting
 df['Name'] = df['Name'].astype(str)
 df['Title'] = df['Name'].apply(lambda x: x.split(',')[1].split('.')[0].strip() if ',' in x and '.' in x else 'Unknown')
 
-# Consolidate rare titles
 title_counts = df['Title'].value_counts()
-# Identify titles with less than 10 occurrences (adjust threshold as needed)
 rare_titles = title_counts[title_counts < 10].index
 df['Title'] = df['Title'].replace(rare_titles, 'Rare')
 
@@ -84,20 +62,11 @@ print("\n--- After Feature Engineering ---")
 print(df[['FamilySize', 'IsAlone', 'Title']].head())
 print("\nTitle value counts:\n", df['Title'].value_counts())
 
-
-# --- 3. Convert categorical features into numerical using encoding. ---
-
-# Encode 'Sex' (binary: male=0, female=1)
-# Ensure 'Sex' is string type before mapping
 df['Sex'] = df['Sex'].astype(str).map({'male': 0, 'female': 1})
 
-# IMPORTANT FIX for plotting: Convert 'Sex' and 'Survived' to categorical type
-# This resolves the AttributeError when using 'Sex' as hue in sns.countplot
 df['Sex'] = df['Sex'].astype('category')
 df['Survived'] = df['Survived'].astype('category') # Good practice for target variable
 
-# One-hot encode 'Embarked' and 'Title'
-# Ensure columns are string type before get_dummies
 if 'Embarked' in df.columns:
     df['Embarked'] = df['Embarked'].astype(str)
     df = pd.get_dummies(df, columns=['Embarked'], prefix='Embarked', drop_first=True)
@@ -107,8 +76,6 @@ else:
 df['Title'] = df['Title'].astype(str)
 df = pd.get_dummies(df, columns=['Title'], prefix='Title', drop_first=True)
 
-# One-hot encode 'Pclass' (treating as categorical)
-# Convert to string to ensure Pclass_1, Pclass_2 etc. columns are created
 if 'Pclass' in df.columns:
     df['Pclass'] = df['Pclass'].astype(str)
     df = pd.get_dummies(df, columns=['Pclass'], prefix='Pclass', drop_first=True)
@@ -121,15 +88,8 @@ print(df.head())
 print("\n")
 df.info()
 
-
-# --- 4. Normalize/standardize the numerical features. ---
-
-# Identify numerical columns for scaling
-# Exclude 'PassengerId', 'Survived', and newly created one-hot encoded columns
-# Also exclude 'IsAlone' as it's already binary (0 or 1)
 numerical_cols_for_scaling = ['Age', 'Fare', 'FamilySize'] # FamilySize is numerical here
 
-# Check if columns exist before scaling
 existing_numerical_cols = [col for col in numerical_cols_for_scaling if col in df.columns]
 
 if existing_numerical_cols:
@@ -140,9 +100,6 @@ if existing_numerical_cols:
 else:
     print("\nNo numerical columns found for scaling (Age, Fare, FamilySize).")
 
-
-# --- 7. Drop Unnecessary Columns (Moved here as it's a final step before ML) ---
-# Drop original columns that are no longer needed or have been transformed
 columns_to_drop = ['PassengerId', 'Name', 'Ticket', 'SibSp', 'Parch']
 existing_columns_to_drop = [col for col in columns_to_drop if col in df.columns]
 
@@ -159,14 +116,9 @@ print("\n--- Final Data Info After All Preprocessing Steps ---")
 df.info()
 print("\nMissing values in final DataFrame:\n", df.isnull().sum())
 
-
-# --- 5. Visualize outliers using boxplots and remove them. ---
-# (Re-ordered to be after scaling, as scaling can affect outlier appearance,
-# but removal should ideally be done on the scaled data if scaling is part of the pipeline)
-
 print("\n--- Outlier Visualization (Before Removal on Scaled Data) ---")
-# Use the scaled numerical columns for outlier visualization
-numerical_cols_for_outliers = ['Age', 'Fare', 'FamilySize'] # These are now scaled
+
+numerical_cols_for_outliers = ['Age', 'Fare', 'FamilySize'] 
 
 plt.figure(figsize=(15, 5))
 for i, col in enumerate(numerical_cols_for_outliers):
@@ -177,9 +129,6 @@ for i, col in enumerate(numerical_cols_for_outliers):
 plt.tight_layout()
 plt.show()
 
-# Outlier Removal using IQR for 'Age' and 'Fare' (and FamilySize if desired)
-# We'll focus on 'Age' and 'Fare' as they are common candidates for outlier removal.
-# FamilySize might have legitimate high values (large families).
 outlier_cols_to_clean = ['Age', 'Fare']
 df_cleaned_final = df.copy() # Create a copy to store data after outlier removal
 
@@ -192,7 +141,7 @@ for col in outlier_cols_to_clean:
         IQR = Q3 - Q1
         lower_bound = Q1 - 1.5 * IQR
         upper_bound = Q3 + 1.5 * IQR
-        # Filter out rows where the column value is outside the bounds
+       
         df_cleaned_final = df_cleaned_final[(df_cleaned_final[col] >= lower_bound) & (df_cleaned_final[col] <= upper_bound)]
     else:
         print(f"Column '{col}' not found for outlier removal.")
@@ -214,7 +163,6 @@ for i, col in enumerate(outlier_cols_to_clean):
 plt.tight_layout()
 plt.show()
 
-# --- Visualization After Outlier Removal ---
 plt.figure(figsize=(15, 5))
 for i, col in enumerate(outlier_cols_to_clean):
     if col in df_cleaned_final.columns:
@@ -224,23 +172,19 @@ for i, col in enumerate(outlier_cols_to_clean):
 plt.tight_layout()
 plt.show()
 
-# --- Final Data Overview After Outlier Removal ---
 print("\n--- Final Data Info After All Preprocessing Steps (including Outlier Removal) ---")
 df_cleaned_final.info()
 print("\n--- Final Cleaned Data Snapshot (First 5 Rows) ---")
 print(df_cleaned_final.head())
 print("\nMissing values in final DataFrame:\n", df_cleaned_final.isnull().sum())
 
-# --- Additional Visualizations of Cleaned Features ---
 plt.figure(figsize=(12, 5))
 
 plt.subplot(1, 2, 1)
-# Ensure 'Age' is numerical for histplot
 sns.histplot(df_cleaned_final['Age'], kde=True)
 plt.title('Distribution of Age (Imputed & Scaled)')
 
 plt.subplot(1, 2, 2)
-# This plot now works correctly because 'Sex' and 'Survived' are categorical
 sns.countplot(x='Survived', hue='Sex', data=df_cleaned_final)
 plt.title('Survival Count by Sex')
 
@@ -248,18 +192,12 @@ plt.tight_layout()
 plt.show()
 
 plt.figure(figsize=(8, 6))
-# Fix: Round FamilySize to nearest integer before converting to string
-# This handles the case where FamilySize might be scaled to float values
 df_cleaned_final['FamilySize_Category'] = df_cleaned_final['FamilySize'].round().astype(int).astype(str)
 sns.countplot(x='FamilySize_Category', hue='Survived', data=df_cleaned_final)
 plt.title('Survival Count by Family Size')
 plt.show()
 
-# Removed the duplicate FamilySize visualization that was causing the error
-
 plt.figure(figsize=(8, 6))
-# Ensure 'FamilySize' is treated as categorical for countplot
-# It was scaled, but for this plot, we want it as discrete categories
 df_cleaned_final['FamilySize_Category'] = df_cleaned_final['FamilySize'].astype('category')
 sns.countplot(x='FamilySize_Category', hue='Survived', data=df_cleaned_final)
 plt.title('Survival Count by Family Size')
