@@ -1,0 +1,41 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df = pd.read_csv('https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv')
+
+plt.figure(figsize=(6, 5))
+sns.countplot(x='Sex', hue='Survived', data=df, palette='viridis')
+plt.title('Survival Count by Sex')
+plt.xlabel('Sex')
+plt.ylabel('Count')
+plt.show()
+
+plt.figure(figsize=(7, 6))
+sns.countplot(x='Pclass', hue='Survived', data=df, palette='magma')
+plt.title('Survival Count by Pclass')
+plt.xlabel('Passenger Class')
+plt.ylabel('Count')
+plt.show()
+
+plt.figure(figsize=(7, 6))
+sns.countplot(x='Embarked', hue='Survived', data=df, palette='plasma')
+plt.title('Survival Count by Embarked Port')
+plt.xlabel('Port of Embarkation')
+plt.ylabel('Count')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Pclass', y='Age', data=df, palette='coolwarm')
+plt.title('Age Distribution by Pclass')
+plt.xlabel('Passenger Class')
+plt.ylabel('Age')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Pclass', y='Fare', data=df, palette='coolwarm')
+plt.title('Fare Distribution by Pclass')
+plt.xlabel('Passenger Class')
+plt.ylabel('Fare')
+plt.yscale('log')  
+plt.show()
