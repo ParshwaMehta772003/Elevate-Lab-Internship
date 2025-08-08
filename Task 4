@@ -1,0 +1,285 @@
+"""
+Safe Logistic Regression pipeline for binary classification (Breast Cancer example).
+This script:
+ - Tries to load CSVs from common names under /mnt/data (if readable)
+ - Falls back to sklearn's built-in dataset if CSV not found
+ - Uses a writable OUT_DIR (prefers /mnt/data if writable; otherwise uses a safe fallback)
+ - Performs scaling, LogisticRegression training, evaluation, ROC + Precision/Recall threshold plots
+ - Finds best threshold by F1 and saves predictions summary + plots to OUT_DIR
+"""
+
+import os
+from glob import glob
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import tempfile
+from pathlib import Path
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    confusion_matrix, precision_score, recall_score, f1_score,
+    accuracy_score, roc_curve, roc_auc_score, classification_report
+)
+
+# -------------------------
+# Choose a safe output directory
+# -------------------------
+def choose_out_dir(preferred="/mnt/data"):
+    # If the preferred path exists AND is writable, use it.
+    try:
+        p = Path(preferred)
+        if p.exists() and os.access(preferred, os.W_OK):
+            return p
+        # If it doesn't exist, try creating it (but handle permission)
+        if not p.exists():
+            try:
+                p.mkdir(parents=True, exist_ok=True)
+                if os.access(preferred, os.W_OK):
+                    return p
+            except Exception:
+                pass
+    except Exception:
+        pass
+    # Fallbacks: tempdir, then current working dir
+    tmp = Path(tempfile.gettempdir())
+    if os.access(tmp, os.W_OK):
+        return tmp
+    return Path.cwd()
+
+OUT_DIR = choose_out_dir("/mnt/data")
+print("Using OUT_DIR =", OUT_DIR)
+
+# -------------------------
+# Candidate CSV names to try
+# -------------------------
+CSV_CANDIDATES = [
+    str(OUT_DIR / "Breast Cancer Wisconsin (Diagnostic) Data Set.csv"),
+    str(OUT_DIR / "Breast Cancer Wisconsin (Diagnostic).csv"),
+    str(OUT_DIR / "breast_cancer_wisconsin.csv"),
+    str(OUT_DIR / "breast_cancer.csv"),
+    str(OUT_DIR / "BreastCancer.csv"),
+    str(OUT_DIR / "Breast Cancer.csv"),
+]
+
+# Also search for any file with 'breast' in name under OUT_DIR
+CSV_CANDIDATES += glob(str(OUT_DIR / "**" / "*breast*"), recursive=True)
+# Also search top-level /mnt/data (if different) and current working dir for convenience
+CSV_CANDIDATES += glob("/mnt/data/**/*breast*", recursive=True)
+CSV_CANDIDATES += glob("./**/*breast*", recursive=True)
+
+# -------------------------
+# Load dataframe helper
+# -------------------------
+def load_dataframe(candidates):
+    for p in candidates:
+        if not isinstance(p, str):
+            continue
+        try:
+            if os.path.isfile(p):
+                print(f"Attempting to load CSV from: {p}")
+                df = pd.read_csv(p)
+                print("Successfully loaded CSV:", p)
+                return df, f"csv:{p}"
+        except Exception as e:
+            print(f"Found file {p} but couldn't read as CSV: {e}")
+    # Fallback to sklearn
+    print("No suitable CSV found in candidates. Falling back to sklearn.datasets.load_breast_cancer()")
+    ds = load_breast_cancer(as_frame=True)
+    df = ds.frame.copy()
+    df['diagnosis'] = df['target'].map({1: 'M', 0: 'B'})
+    cols = ['diagnosis'] + [c for c in df.columns if c != 'diagnosis']
+    df = df[cols]
+    return df, "sklearn_builtin"
+
+df, source = load_dataframe(CSV_CANDIDATES)
+print("Data source:", source)
+print("Loaded dataframe shape:", df.shape)
+print(df.head().to_string())
+
+# -------------------------
+# Prepare features X and target y
+# -------------------------
+if 'diagnosis' in df.columns and set(df['diagnosis'].dropna().unique()).issubset({'M', 'B'}):
+    y = df['diagnosis'].map({'M': 1, 'B': 0})
+    X = df.drop(columns=['diagnosis'])
+else:
+    # fallback: assume last column is target
+    X = df.iloc[:, :-1]
+    y = df.iloc[:, -1]
+    if y.dtype == object:
+        uniques = y.unique()
+        if len(uniques) == 2:
+            mapping = {uniques[0]: 0, uniques[1]: 1}
+            y = y.map(mapping)
+        else:
+            raise ValueError("Target column has more than 2 unique values; this script expects binary target.")
+
+print("Feature matrix shape:", X.shape)
+print("Target shape:", y.shape)
+print("Class distribution:\n", y.value_counts())
+
+# -------------------------
+# Train/test split and scaling
+# -------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# -------------------------
+# Train LogisticRegression
+# -------------------------
+model = LogisticRegression(solver='liblinear', random_state=42)
+model.fit(X_train_scaled, y_train)
+
+# -------------------------
+# Predictions & evaluation (threshold=0.5)
+# -------------------------
+y_proba = model.predict_proba(X_test_scaled)[:, 1]
+y_pred_default = (y_proba >= 0.5).astype(int)
+
+conf_mat = confusion_matrix(y_test, y_pred_default)
+precision = precision_score(y_test, y_pred_default)
+recall = recall_score(y_test, y_pred_default)
+f1 = f1_score(y_test, y_pred_default)
+accuracy = accuracy_score(y_test, y_pred_default)
+roc_auc = roc_auc_score(y_test, y_proba)
+
+print("\n=== Default threshold (0.5) evaluation ===")
+print("Confusion matrix:\n", conf_mat)
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+print(f"F1: {f1:.4f}")
+print(f"ROC-AUC: {roc_auc:.4f}")
+print("\nClassification report:\n", classification_report(y_test, y_pred_default, digits=4))
+
+# Save confusion matrix CSV
+conf_df = pd.DataFrame(conf_mat, index=['Actual 0', 'Actual 1'], columns=['Pred 0', 'Pred 1'])
+conf_csv = OUT_DIR / "confusion_matrix_default.csv"
+try:
+    conf_df.to_csv(conf_csv)
+    print("Saved confusion matrix CSV to:", conf_csv)
+except Exception as e:
+    print("Failed to save confusion matrix CSV:", e)
+
+# -------------------------
+# ROC curve
+# -------------------------
+fpr, tpr, _ = roc_curve(y_test, y_proba)
+plt.figure()
+plt.plot(fpr, tpr)
+plt.plot([0, 1], [0, 1], linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate (Recall)')
+plt.title(f'ROC Curve (AUC = {roc_auc:.4f})')
+roc_path = OUT_DIR / "roc_curve.png"
+try:
+    plt.savefig(roc_path)
+    print("Saved ROC curve to:", roc_path)
+except Exception as e:
+    print("Failed to save ROC curve:", e)
+plt.close()
+
+# -------------------------
+# Precision and Recall vs Threshold
+# -------------------------
+thresholds = np.linspace(0, 1, 101)
+precisions = []
+recalls = []
+for t in thresholds:
+    preds_t = (y_proba >= t).astype(int)
+    if preds_t.sum() == 0:
+        precisions.append(np.nan)
+        recalls.append(0.0)
+    else:
+        precisions.append(precision_score(y_test, preds_t))
+        recalls.append(recall_score(y_test, preds_t))
+
+plt.figure()
+plt.plot(thresholds, precisions, label='Precision')
+plt.plot(thresholds, recalls, label='Recall')
+plt.xlabel('Threshold')
+plt.ylabel('Score')
+plt.title('Precision and Recall vs Threshold')
+plt.legend()
+prt_path = OUT_DIR / "precision_recall_vs_threshold.png"
+try:
+    plt.savefig(prt_path)
+    print("Saved Precision/Recall vs Threshold plot to:", prt_path)
+except Exception as e:
+    print("Failed to save Precision/Recall plot:", e)
+plt.close()
+
+# -------------------------
+# Best threshold by F1 on test set
+# -------------------------
+best_f1 = -1.0
+best_t = None
+for t in thresholds:
+    preds_t = (y_proba >= t).astype(int)
+    if preds_t.sum() == 0:
+        continue
+    f1t = f1_score(y_test, preds_t)
+    if f1t > best_f1:
+        best_f1 = f1t
+        best_t = t
+
+print(f"Best threshold by F1 on test set: {best_t:.3f} (F1 = {best_f1:.4f})")
+
+y_pred_best = (y_proba >= best_t).astype(int)
+conf_best = confusion_matrix(y_test, y_pred_best)
+print("Confusion matrix at best threshold:\n", conf_best)
+print("Precision, Recall, F1 at best threshold:",
+      precision_score(y_test, y_pred_best),
+      recall_score(y_test, y_pred_best),
+      f1_score(y_test, y_pred_best))
+
+# Save predictions summary CSV
+summary_df = pd.DataFrame({
+    'y_true': y_test.reset_index(drop=True),
+    'prob_pos': y_proba,
+    'pred_0.5': y_pred_default,
+    f'pred_{best_t:.3f}': y_pred_best
+})
+summary_csv = OUT_DIR / "predictions_summary.csv"
+try:
+    summary_df.to_csv(summary_csv, index=False)
+    print("Saved predictions summary CSV to:", summary_csv)
+except Exception as e:
+    print("Failed to save predictions summary CSV:", e)
+
+# -------------------------
+# Sigmoid explanation
+# -------------------------
+print("""
+Sigmoid function (logistic function):
+    sigma(z) = 1 / (1 + exp(-z))
+where z = w^T x + b (linear combination of features).
+The sigmoid maps z to (0,1) and is interpreted as the probability of the positive class.
+Choose a decision threshold (default 0.5) to convert probability -> class label; you can tune it to trade off precision vs recall.
+""")
+
+# -------------------------
+# Save coefficients (if numeric features)
+# -------------------------
+try:
+    coef = model.coef_.flatten()
+    feature_names = X.columns.tolist()
+    coef_df = pd.DataFrame({'feature': feature_names, 'coef': coef})
+    coef_df['odds_ratio'] = np.exp(coef_df['coef'])
+    coef_df = coef_df.sort_values(key=lambda x: abs(x['coef']), ascending=False)
+    coef_csv = OUT_DIR / "logreg_coefficients.csv"
+    coef_df.to_csv(coef_csv, index=False)
+    print("Saved logistic regression coefficients (odds ratios) to:", coef_csv)
+except Exception as e:
+    print("Could not compute/save coefficients:", e)
+
+print("\nPipeline finished. Check OUT_DIR for output files.")
