@@ -1,0 +1,94 @@
+DataFrame loaded. Initial shape: (545, 13)
+Initial NaN counts per column:
+ price               0
+area                0
+bedrooms            0
+bathrooms           0
+stories             0
+mainroad            0
+guestroom           0
+basement            0
+hotwaterheating     0
+airconditioning     0
+parking             0
+prefarea            0
+furnishingstatus    0
+dtype: int64
+
+After binary mapping, NaN counts per column:
+ price               0
+area                0
+bedrooms            0
+bathrooms           0
+stories             0
+mainroad            0
+guestroom           0
+basement            0
+hotwaterheating     0
+airconditioning     0
+parking             0
+prefarea            0
+furnishingstatus    0
+dtype: int64
+
+After one-hot encoding and dropping original 'furnishingstatus', NaN counts per column:
+ price                        0
+area                         0
+bedrooms                     0
+bathrooms                    0
+stories                      0
+mainroad                     0
+guestroom                    0
+basement                     0
+hotwaterheating              0
+airconditioning              0
+parking                      0
+prefarea                     0
+furnishing_furnished         0
+furnishing_semi-furnished    0
+furnishing_unfurnished       0
+dtype: int64
+
+No additional missing values found or dropped after all preprocessing.
+DataFrame shape after all preprocessing and final dropna: (545, 15)
+
+--- Simple Linear Regression (Price vs. Area) ---
+Mean Absolute Error (MAE): 1474748.13
+Mean Squared Error (MSE): 3675286604768.19
+Root Mean Squared Error (RMSE): 1917103.70
+R-squared (R²): 0.2729
+Coefficient (Area): 425.73
+Intercept: 2512254.26
+
+
+Interpretation of Simple Linear Regression Coefficient:
+For every one unit increase in 'area', the 'price' is predicted to increase by 425.73, assuming a linear relationship.
+
+--- Multiple Linear Regression (Price vs. All Features) ---
+Mean Absolute Error (MAE): 970043.40
+Mean Squared Error (MSE): 1754318687330.66
+Root Mean Squared Error (RMSE): 1324506.96
+R-squared (R²): 0.6529
+Intercept: 79856.73
+
+Multiple Linear Regression Coefficients:
+                      Feature   Coefficient
+0                        area  2.359688e+02
+1                    bedrooms  7.677870e+04
+2                   bathrooms  1.094445e+06
+3                     stories  4.074766e+05
+4                    mainroad  3.679199e+05
+5                   guestroom  2.316100e+05
+6                    basement  3.902512e+05
+7             hotwaterheating  6.846499e+05
+8             airconditioning  7.914267e+05
+9                     parking  2.248419e+05
+10                   prefarea  6.298906e+05
+11       furnishing_furnished  1.801756e+05
+12  furnishing_semi-furnished  5.329381e+04
+13     furnishing_unfurnished -2.334694e+05
+
+Interpretation of Multiple Linear Regression Coefficients:
+Each coefficient indicates the expected change in 'price' for a one-unit increase in the corresponding feature, holding all other features constant.
+For example, a positive coefficient for 'airconditioning' suggests that houses with air conditioning tend to be more expensive, all else being equal.
+The R-squared value of the multiple linear regression model is generally higher than the simple linear regression, indicating that more features help explain more variance in house prices.
