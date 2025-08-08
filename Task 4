@@ -1,11 +1,12 @@
 """
-Safe Logistic Regression pipeline for binary classification (Breast Cancer example).
-This script:
- - Tries to load CSVs from common names under /mnt/data (if readable)
- - Falls back to sklearn's built-in dataset if CSV not found
- - Uses a writable OUT_DIR (prefers /mnt/data if writable; otherwise uses a safe fallback)
- - Performs scaling, LogisticRegression training, evaluation, ROC + Precision/Recall threshold plots
- - Finds best threshold by F1 and saves predictions summary + plots to OUT_DIR
+Safe Logistic Regression pipeline (fixed coefficient saving).
+- Tries to read candidate CSVs under OUT_DIR (prefers /mnt/data if writable)
+- Falls back to sklearn's breast cancer dataset
+- Train/test split, StandardScaler, LogisticRegression
+- Evaluation: confusion matrix, precision, recall, f1, accuracy, ROC-AUC
+- Plots: ROC curve, Precision/Recall vs threshold
+- Finds best threshold by F1
+- Saves outputs to OUT_DIR (defaults to /tmp or another writable dir)
 """
 
 import os
@@ -29,12 +30,10 @@ from sklearn.metrics import (
 # Choose a safe output directory
 # -------------------------
 def choose_out_dir(preferred="/mnt/data"):
-    # If the preferred path exists AND is writable, use it.
     try:
         p = Path(preferred)
         if p.exists() and os.access(preferred, os.W_OK):
             return p
-        # If it doesn't exist, try creating it (but handle permission)
         if not p.exists():
             try:
                 p.mkdir(parents=True, exist_ok=True)
@@ -44,13 +43,13 @@ def choose_out_dir(preferred="/mnt/data"):
                 pass
     except Exception:
         pass
-    # Fallbacks: tempdir, then current working dir
     tmp = Path(tempfile.gettempdir())
     if os.access(tmp, os.W_OK):
         return tmp
     return Path.cwd()
 
-OUT_DIR = choose_out_dir("/mnt/data")
+# You said "Using OUT_DIR = /tmp" — set explicitly if you want:
+OUT_DIR = Path("/tmp") if Path("/tmp").exists() and os.access("/tmp", os.W_OK) else choose_out_dir("/mnt/data")
 print("Using OUT_DIR =", OUT_DIR)
 
 # -------------------------
@@ -65,9 +64,8 @@ CSV_CANDIDATES = [
     str(OUT_DIR / "Breast Cancer.csv"),
 ]
 
-# Also search for any file with 'breast' in name under OUT_DIR
+# Search for any file with 'breast' in name under OUT_DIR, /mnt/data, and cwd
 CSV_CANDIDATES += glob(str(OUT_DIR / "**" / "*breast*"), recursive=True)
-# Also search top-level /mnt/data (if different) and current working dir for convenience
 CSV_CANDIDATES += glob("/mnt/data/**/*breast*", recursive=True)
 CSV_CANDIDATES += glob("./**/*breast*", recursive=True)
 
@@ -268,18 +266,27 @@ Choose a decision threshold (default 0.5) to convert probability -> class label;
 """)
 
 # -------------------------
-# Save coefficients (if numeric features)
+# Save coefficients properly (fixed)
 # -------------------------
 try:
     coef = model.coef_.flatten()
     feature_names = X.columns.tolist()
     coef_df = pd.DataFrame({'feature': feature_names, 'coef': coef})
+    # Add absolute-value column for sorting, then drop it before saving
+    coef_df['abs_coef'] = coef_df['coef'].abs()
+    coef_df = coef_df.sort_values(by='abs_coef', ascending=False).reset_index(drop=True)
     coef_df['odds_ratio'] = np.exp(coef_df['coef'])
-    coef_df = coef_df.sort_values(key=lambda x: abs(x['coef']), ascending=False)
+    # Reorder columns nicely
+    coef_df = coef_df[['feature', 'coef', 'odds_ratio', 'abs_coef']]
     coef_csv = OUT_DIR / "logreg_coefficients.csv"
     coef_df.to_csv(coef_csv, index=False)
-    print("Saved logistic regression coefficients (odds ratios) to:", coef_csv)
+    print("Saved logistic regression coefficients (with odds_ratio and abs_coef) to:", coef_csv)
 except Exception as e:
     print("Could not compute/save coefficients:", e)
 
-print("\nPipeline finished. Check OUT_DIR for output files.")
+print("\nPipeline finished. Check OUT_DIR for these files:")
+print(" -", conf_csv)
+print(" -", roc_path)
+print(" -", prt_path)
+print(" -", summary_csv)
+print(" -", coef_csv)
