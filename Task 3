@@ -1,0 +1,136 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import os
+
+# 1. Import and preprocess the dataset.
+try:
+    df = pd.read_csv(file_path)
+    print(f"DataFrame loaded. Initial shape: {df.shape}")
+    print("Initial NaN counts per column:\n", df.isnull().sum())
+except FileNotFoundError:
+    print(f"Error: The file '{file_path}' was not found.")
+    print("Please ensure the 'Housing.csv' file is in the correct directory,")
+    print("or update the 'file_path' variable in the script with the correct path.")
+    exit() # Exit the script if the file is not found
+
+# --- Data Preprocessing ---
+
+# Corrected list of binary categorical variables (excluding 'parking')
+# Based on the context, 'parking' is already numerical (0, 1, 2, 3)
+binary_cols = ['mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'prefarea']
+for col in binary_cols:
+    df[col] = df[col].map({'yes': 1, 'no': 0})
+print("\nAfter binary mapping, NaN counts per column:\n", df.isnull().sum())
+
+# Convert 'furnishingstatus' using one-hot encoding
+furnishing_status_dummies = pd.get_dummies(df['furnishingstatus'], prefix='furnishing')
+df = pd.concat([df, furnishing_status_dummies], axis=1)
+df.drop('furnishingstatus', axis=1, inplace=True)
+print("\nAfter one-hot encoding and dropping original 'furnishingstatus', NaN counts per column:\n", df.isnull().sum())
+
+# --- CRITICAL STEP: Drop rows with any remaining NaN values AFTER all mappings/encodings ---
+# This ensures that any NaNs introduced by mapping (e.g., if a binary column had unexpected values)
+# or existing in numerical columns are removed before model training.
+initial_rows_before_final_dropna = df.shape[0]
+df.dropna(inplace=True)
+rows_after_final_dropna = df.shape[0]
+
+if initial_rows_before_final_dropna > rows_after_final_dropna:
+    print(f"\nDropped {initial_rows_before_final_dropna - rows_after_final_dropna} rows due to missing values after all preprocessing.")
+else:
+    print("\nNo additional missing values found or dropped after all preprocessing.")
+
+print(f"DataFrame shape after all preprocessing and final dropna: {df.shape}")
+if df.shape[0] == 0:
+    print("ERROR: DataFrame is empty after preprocessing. This is why n_samples=0.")
+    print("Please check your raw data for extensive missing values or unexpected data types.")
+    exit() # Exit if DataFrame is empty to prevent further errors
+
+# --- Simple Linear Regression (Price vs. Area) ---
+
+print("\n--- Simple Linear Regression (Price vs. Area) ---")
+
+# Prepare data for simple linear regression
+X_simple = df[['area']]
+y_simple = df['price']
+
+# 2. Split data into train-test sets.
+X_train_simple, X_test_simple, y_train_simple, y_test_simple = train_test_split(X_simple, y_simple, test_size=0.2, random_state=42)
+
+# 3. Fit a Linear Regression model using sklearn.linear_model.
+model_simple = LinearRegression()
+model_simple.fit(X_train_simple, y_train_simple)
+
+# Make predictions
+y_pred_simple = model_simple.predict(X_test_simple)
+
+# 4. Evaluate model using MAE, MSE, R².
+mae_simple = mean_absolute_error(y_test_simple, y_pred_simple)
+mse_simple = mean_squared_error(y_test_simple, y_pred_simple)
+rmse_simple = np.sqrt(mse_simple)
+r2_simple = r2_score(y_test_simple, y_pred_simple)
+
+print(f"Mean Absolute Error (MAE): {mae_simple:.2f}")
+print(f"Mean Squared Error (MSE): {mse_simple:.2f}")
+print(f"Root Mean Squared Error (RMSE): {rmse_simple:.2f}")
+print(f"R-squared (R²): {r2_simple:.4f}")
+print(f"Coefficient (Area): {model_simple.coef_[0]:.2f}")
+print(f"Intercept: {model_simple.intercept_:.2f}")
+
+# 5. Plot regression line and interpret coefficients.
+plt.figure(figsize=(10, 6))
+plt.scatter(X_test_simple, y_test_simple, color='blue', label='Actual Prices')
+plt.plot(X_test_simple, y_pred_simple, color='red', linewidth=2, label='Regression Line')
+plt.title('Simple Linear Regression: Price vs. Area')
+plt.xlabel('Area')
+plt.ylabel('Price')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+print("\nInterpretation of Simple Linear Regression Coefficient:")
+print(f"For every one unit increase in 'area', the 'price' is predicted to increase by {model_simple.coef_[0]:.2f}, assuming a linear relationship.")
+
+# --- Multiple Linear Regression (Price vs. All Features) ---
+
+print("\n--- Multiple Linear Regression (Price vs. All Features) ---")
+
+# Prepare data for multiple linear regression
+X_multi = df.drop('price', axis=1)
+y_multi = df['price']
+
+# 2. Split data into train-test sets.
+X_train_multi, X_test_multi, y_train_multi, y_test_multi = train_test_split(X_multi, y_multi, test_size=0.2, random_state=42)
+
+# 3. Fit a Linear Regression model using sklearn.linear_model.
+model_multi = LinearRegression()
+model_multi.fit(X_train_multi, y_train_multi)
+
+# Make predictions
+y_pred_multi = model_multi.predict(X_test_multi)
+
+# 4. Evaluate model using MAE, MSE, R².
+mae_multi = mean_absolute_error(y_test_multi, y_pred_multi)
+mse_multi = mean_squared_error(y_test_multi, y_pred_multi)
+rmse_multi = np.sqrt(mse_multi)
+r2_multi = r2_score(y_test_multi, y_pred_multi)
+
+print(f"Mean Absolute Error (MAE): {mae_multi:.2f}")
+print(f"Mean Squared Error (MSE): {mse_multi:.2f}")
+print(f"Root Mean Squared Error (RMSE): {rmse_multi:.2f}")
+print(f"R-squared (R²): {r2_multi:.4f}")
+print(f"Intercept: {model_multi.intercept_:.2f}")
+
+# 5. Plot regression line and interpret coefficients.
+coefficients_df = pd.DataFrame({'Feature': X_multi.columns, 'Coefficient': model_multi.coef_})
+print("\nMultiple Linear Regression Coefficients:")
+print(coefficients_df)
+
+print("\nInterpretation of Multiple Linear Regression Coefficients:")
+print("Each coefficient indicates the expected change in 'price' for a one-unit increase in the corresponding feature, holding all other features constant.")
+print("For example, a positive coefficient for 'airconditioning' suggests that houses with air conditioning tend to be more expensive, all else being equal.")
+print("The R-squared value of the multiple linear regression model is generally higher than the simple linear regression, indicating that more features help explain more variance in house prices.")
