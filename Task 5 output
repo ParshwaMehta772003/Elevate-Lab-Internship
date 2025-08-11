@@ -1,0 +1,51 @@
+--- 1. Data Preparation ---
+Data preparation complete.
+X_train shape: (717, 13)
+X_test shape: (308, 13)
+y_train shape: (717,)
+y_test shape: (308,)
+
+--- 2. Decision Tree Classifier ---
+Decision Tree Classifier Accuracy (max_depth=3): 0.8052
+Decision Tree visualization saved as 'heart_decision_tree.png'.
+
+Decision Tree visualization displayed using Matplotlib.
+
+--- 3. Analyze Overfitting and Control Tree Depth ---
+
+Analysis of overfitting with different tree depths complete. Check the plot.
+
+--- 4. Random Forest Classifier ---
+Random Forest Classifier Accuracy: 0.9805
+Decision Tree Classifier Accuracy (max_depth=3): 0.8052
+Random Forest Classifier Accuracy: 0.9805
+Random Forest performed better than the Decision Tree (with max_depth=3).
+
+--- 5. Interpret Feature Importances ---
+Feature Importances from Random Forest:
+     Feature  Importance
+2         cp    0.132274
+7    thalach    0.125039
+11        ca    0.122912
+9    oldpeak    0.122852
+12      thal    0.113005
+0        age    0.085554
+4       chol    0.079872
+3   trestbps    0.068356
+10     slope    0.051335
+8      exang    0.042210
+1        sex    0.028721
+6    restecg    0.018155
+5        fbs    0.009714
+
+
+--- 6. Evaluate Using Cross-Validation ---
+Decision Tree Cross-Validation Accuracies (max_depth=3): [0.85365854 0.84878049 0.82926829 0.82439024 0.79512195]
+Mean Decision Tree Cross-Validation Accuracy (max_depth=3): 0.8302
+Standard Deviation of Decision Tree Cross-Validation Accuracy (max_depth=3): 0.0208
+
+Random Forest Cross-Validation Accuracies: [1.         1.         1.         1.         0.98536585]
+Mean Random Forest Cross-Validation Accuracy: 0.9971
+Standard Deviation of Random Forest Cross-Validation Accuracy: 0.0059
+
+--- Task Complete ---
