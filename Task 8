@@ -1,0 +1,51 @@
+# Import Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+# Load the Dataset
+data = pd.read_csv('Mall_Customers.csv')  # Adjust the path if necessary
+print(data.head())
+
+# Optional: Visualize the distribution of Age and Annual Income
+plt.scatter(data['Age'], data['Annual Income (k$)'])
+plt.title('Age vs Annual Income')
+plt.xlabel('Age')
+plt.ylabel('Annual Income (k$)')
+plt.show()
+
+# Select Features for Clustering
+X = data[['Annual Income (k$)', 'Spending Score (1-100)']]
+
+# Fit K-Means with explicit n_init
+kmeans = KMeans(n_clusters=5, n_init=10, random_state=42)
+data['Cluster'] = kmeans.fit_predict(X)
+
+# Use the Elbow Method to Find Optimal K
+inertia = []
+K = range(1, 11)
+for k in K:
+    kmeans = KMeans(n_clusters=k, n_init=10, random_state=42)
+    kmeans.fit(X)
+    inertia.append(kmeans.inertia_)
+
+# Plot the Elbow Curve
+plt.plot(K, inertia, 'bo-')
+plt.xlabel('Number of Clusters (K)')
+plt.ylabel('Inertia')
+plt.title('Elbow Method for Optimal K')
+plt.show()
+
+# Visualize Clusters
+plt.scatter(X['Annual Income (k$)'], X['Spending Score (1-100)'], c=data['Cluster'], cmap='viridis')
+plt.title('Clusters of Customers')
+plt.xlabel('Annual Income (k$)')
+plt.ylabel('Spending Score (1-100)')
+plt.colorbar(label='Cluster')
+plt.show()
+
+# Calculate Silhouette Score
+silhouette_avg = silhouette_score(X, data['Cluster'])
+print(f'Silhouette Score: {silhouette_avg}')
