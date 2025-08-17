@@ -1,0 +1,34 @@
+--- 1. Loading and Preparing Dataset ---
+Available columns in X: ['mean radius', 'mean texture', 'mean perimeter', 'mean area', 'mean smoothness', 'mean compactness', 'mean concavity', 'mean concave points', 'mean symmetry', 'mean fractal dimension', 'radius error', 'texture error', 'perimeter error', 'area error', 'smoothness error', 'compactness error', 'concavity error', 'concave points error', 'symmetry error', 'fractal dimension error', 'worst radius', 'worst texture', 'worst perimeter', 'worst area', 'worst smoothness', 'worst compactness', 'worst concavity', 'worst concave points', 'worst symmetry', 'worst fractal dimension']
+Original data shape: (569, 30)
+2D data shape (for visualization): (569, 2)
+Training data samples (full): 398
+Testing data samples (full): 171
+Dataset loaded and prepared successfully.
+
+--- 2. Training SVMs with Linear and RBF Kernels ---
+Linear SVM Test Accuracy: 0.9825
+RBF SVM Test Accuracy (default params): 0.9766
+
+--- 3. Visualizing Decision Boundaries (using 2D data) ---
+
+
+Decision boundaries visualized for 2D data.
+
+--- 4. Tuning Hyperparameters (C and gamma for RBF kernel) ---
+Fitting 5 folds for each of 16 candidates, totalling 80 fits
+Best parameters found: {'C': 10, 'gamma': 0.001, 'kernel': 'rbf'}
+Best cross-validation score (mean accuracy): 0.9799
+Tuned RBF SVM Test Accuracy: 0.9708
+
+--- 5. Cross-Validation Performance Evaluation ---
+Linear SVM Cross-Validation Scores (training set): [0.9875     0.9375     0.975      0.96202532 0.97468354]
+Linear SVM Mean CV Accuracy (training set): 0.9673
+
+RBF SVM Cross-Validation Scores (default params, training set): [0.975      0.9875     0.9625     0.94936709 0.97468354]
+RBF SVM Mean CV Accuracy (default params, training set): 0.9698
+
+Tuned RBF SVM Cross-Validation Scores (training set): [0.9875     0.975      0.975      0.97468354 0.98734177]
+Tuned RBF SVM Mean CV Accuracy (training set): 0.9799
+
+SVM Task Completed!
