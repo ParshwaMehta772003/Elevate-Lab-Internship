@@ -1,73 +1,67 @@
-# Welcome to your Lovable project
+# AI Resume Ranker
 
-## Project info
+AI Resume Ranker is a web application that allows recruiters and hiring managers to quickly rank and filter resumes based on a job description using NLP techniques.
 
-**URL**: https://lovable.dev/projects/ad618323-1251-41cd-a094-dd34106904af
+## Features
 
-## How can I edit this code?
+- Upload resumes in PDF format
+- Extract and analyze text using NLP
+- Rank candidates based on relevance to the job description
+- View results in a clean, responsive dashboard
+- Built with React, Vite, TypeScript, Tailwind CSS, and shadcn-ui
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ad618323-1251-41cd-a094-dd34106904af) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+### 1. Clone the repository
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/ParshwaMehta772003/resume-rankr-ai.git
+cd ai-resume-ranker
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 2. Install Dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Start the development server
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+The app will be available at http://localhost:5173.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+###Project Structure
+/src → React components, pages, and utilities
+/public → Static assets
+vite.config.ts → Vite configuration
+tailwind.config.js → Tailwind setup
 
-**Use GitHub Codespaces**
+###Technologies Used
+Vite for fast builds
+React with TypeScript for type-safe UI development
+Tailwind CSS + shadcn-ui for modern styling
+NLP libraries (e.g., SpaCy / TF-IDF) for resume ranking logic (optional backend integration)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Deployment
+You can deploy this app on any modern hosting platform such as Vercel, Netlify, or Render.
+Example (Vercel):
+npm run build
+vercel deploy
 
-## What technologies are used for this project?
+Custom Domain
+If you’re hosting on Vercel, Netlify, or Render, you can easily attach a custom domain by following the platform’s instructions.
 
-This project is built with:
+License
+This project is licensed under the MIT License — feel free to use and modify it for your own purposes.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+### **5. (Optional) Add a custom domain**
+If you deploy from Lovable or elsewhere, attach a custom domain so no `.lovable.app` URL appears:  
+1. Go to **Project → Settings → Domains → Connect Domain**.  
+2. Add your domain and update your DNS records as instructed.  
 
-Simply open [Lovable](https://lovable.dev/projects/ad618323-1251-41cd-a094-dd34106904af) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Do you want me to **give you this as a ready-to-download ZIP** containing:  
+- the cleaned-up README.md  
+- instructions inside a single text file  
+- sample `index.html` with title updated?  
+Or should I **directly generate the fixed project files (ready to push to GitHub)?**
